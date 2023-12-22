@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public int level;
     public Dongle lastDongle;
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
@@ -22,8 +23,18 @@ public class GameManager : MonoBehaviour
     {
         Dongle newDongle = GetDongle(); //Instantiate()에 의해 새로운 동글이 객체 나옴
         lastDongle = newDongle;
-
         //lastDongle이 비워질때까지 기다려주는 뭔가 필요한데, 이때 코루틴함수:로직 제어(진행정도 모두를)를 유니티에게 맡기는 함수
+        StartCoroutine("_WaitNext"); //코루틴 제어를 시작하기 위한 함수
+    }
+
+    IEnumerator _WaitNext() //IEnumerator: 열거형 인터페이스. 동글이 비워질때까지 기다리는 코루틴 생성
+    {//유니티가 코루틴을 제어하기 위한 키워드. null로 반환하면 한 프레임을 쉬는 그런 구도가 되버림
+        while (lastDongle != null) //yield없이 돌리면 무한루프 빠져 유니티가 멈춤.
+        {
+            yield return null;
+        }
+        yield return new WaitForSeconds(2.5f); //WaitForSeconds:시간(초) 단위로 기다리는 타입. 2.5f초를 쉬고 아래 조식을 실어야함.
+        NextDongle();
     }
 
     public void TouchDown()
