@@ -8,6 +8,10 @@ public class GameManager : MonoBehaviour
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
 
+    void Awake()
+    {
+        Application.targetFrameRate = 60; //프레임(FPS) 설정 속성
+    }
     void Start()
     {
         NextDongle();
