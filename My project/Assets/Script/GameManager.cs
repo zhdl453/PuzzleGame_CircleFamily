@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public int level;
     public Dongle lastDongle;
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
@@ -23,6 +22,8 @@ public class GameManager : MonoBehaviour
     {
         Dongle newDongle = GetDongle(); //Instantiate()에 의해 새로운 동글이 객체 나옴
         lastDongle = newDongle;
+        lastDongle.level = Random.Range(0, 8);
+        lastDongle.gameObject.SetActive(true); //동글이.cs가 OnEnble()될때 애니가 실행이 되니, 동글이 객체를 활성화 켜줘야 애니도 발동됨
         //lastDongle이 비워질때까지 기다려주는 뭔가 필요한데, 이때 코루틴함수:로직 제어(진행정도 모두를)를 유니티에게 맡기는 함수
         StartCoroutine("_WaitNext"); //코루틴 제어를 시작하기 위한 함수
     }

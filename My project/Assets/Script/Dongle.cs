@@ -4,12 +4,19 @@ using UnityEngine;
 
 public class Dongle : MonoBehaviour
 {
+    public int level;
     public bool isDrag;
     Rigidbody2D rigid;
+    Animator anim; //애니메이터 변수 선언 및 코드로 초기화
 
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>(); //동글이의 Rigidbody2D를 가지고 옴
+        anim = GetComponent<Animator>(); //동글이의 Animator를 가지고 옴
+    }
+    void OnEnable() //OnEnble: 동글이가 딱 태어났을때 애니메이션 발동시키고 싶음
+    {//애니메이션 변수가 int로 되어있으니까 애니의 레벨 변수 가지고 오고싶으면 Animator.SetInteger()
+        anim.SetInteger("Level", level);
     }
     void Update()
     {//ScreenToWorldPoint: 스크린좌표를 월드좌표로 변환 
