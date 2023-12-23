@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Dongle : MonoBehaviour
@@ -9,19 +10,42 @@ public class Dongle : MonoBehaviour
     public int level;
     public bool isDrag;
     public bool isMerge;
-    Rigidbody2D rigid;
-    CircleCollider2D circle;
+    public bool isAttach;
+    public Rigidbody2D rigid;
+    CircleCollider2D circle; //C#에서 클래스의 멤버 변수에 대해 접근 제한자를 명시적으로 선언하지 않으면, 기본적으로 private으로 설정됩니다. 
     Animator anim; //애니메이터 변수 선언 및 코드로 초기화
+    SpriteRenderer spriteRenderer;
+    float deadTime;
 
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>(); //동글이의 Rigidbody2D를 가지고 옴
         anim = GetComponent<Animator>(); //동글이의 Animator를 가지고 옴
         circle = GetComponent<CircleCollider2D>(); //동글이의 CircleCollider2D를 가지고 옴
+        spriteRenderer = GetComponent<SpriteRenderer>(); //동글이의 CircleCollider2D를 가지고 옴
     }
     void OnEnable() //OnEnble: 동글이가 딱 태어났을때 애니메이션 발동시키고 싶음
     {//애니메이션 변수가 int로 되어있으니까 애니의 레벨 변수 가지고 오고싶으면 Animator.SetInteger()
         anim.SetInteger("Level", level);
+    }
+    void OnDisable() //객체가 비활성화되면 발동하는 함수
+    {
+        level = 0;
+        isDrag = false;
+        isMerge = false;
+        isAttach = false;
+
+        //동글 트랜스폼 초기화
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity; //0값 주는거임
+        transform.localScale = Vector3.zero;
+
+        //동글 물리 초기화
+        rigid.simulated = false;
+        rigid.velocity = Vector2.zero;
+        rigid.angularVelocity = 0;
+        circle.enabled = true; //꺼져있던거 다시 켜줌.
+
     }
     void Update()
     {//ScreenToWorldPoint: 스크린좌표를 월드좌표로 변환 
@@ -56,6 +80,23 @@ public class Dongle : MonoBehaviour
         isDrag = false;
         rigid.simulated = true; //동글이 Rigidbody2D의 simulated를 켜줌(중력발동)
     }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        StartCoroutine("_AttachRoutine");
+    }
+    //충돌음 시간제한을 위한 코루틴 선언
+    IEnumerator _AttachRoutine()
+    {
+        if (isAttach) //1.처음 부딪칠땐 isAttach가 정의안됐으니, 여긴 그냥 통과할거임.
+        {
+            yield break; //코루틴을 탈출하는 키워드는 yield break;
+        }
+        isAttach = true;
+        manager.sfxPlay(GameManager.sfx.Attach);
+        yield return new WaitForSeconds(0.2f);
+        isAttach = false;
+    }
     //물리적 충돌 중일때 계속 실행되는 함수
     void OnCollisionStay2D(Collision2D collision)
     {
@@ -80,13 +121,17 @@ public class Dongle : MonoBehaviour
             }
         }
     }
-    public void Hide(Vector3 targetPos)
+    public void Hide(Vector3 targetPos) //게임오버에도 이펙트가 나오도록 Hide함수에 로직추가
     {
         isMerge = true;
         //흡수 이동을 위해 물리효과 모두 비활성화
         rigid.simulated = false;
         circle.enabled = false;
         //이동하는거 애니안하고 로직으로 할거라, 이동을 위한 코루틴 돌릴거임
+        if (targetPos == Vector3.up * 100)
+        {
+            EffectPlay();
+        }
         StartCoroutine(_HideRoutine(targetPos)); //인자값 문자열만 받는줄 알았는데 IEnumerator인터페이스도 받는구나..
     }
 
@@ -96,12 +141,20 @@ public class Dongle : MonoBehaviour
         while (frameCount < 20) //while문으로 마치 Update처럼 로직을 실행하여 이동
         {
             frameCount += 1; //frameCount++;
-            transform.position = Vector3.Lerp(transform.position, targetPos, 0.5f);
+            if (targetPos != Vector3.up * 100)
+            {
+                transform.position = Vector3.Lerp(transform.position, targetPos, 0.5f);
+            }
+            else if (targetPos == Vector3.up * 100)
+            {
+                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.zero, 0.2f); //크기 0으로 만들어서 사라지게 만듦
+            }
+
             yield return null;
         }
+        manager.score += (int)Mathf.Pow(2, level);//지정 숫자(왼쪽)에다가 오른쪽float값 더해서 반환해주는 함수
 
-        isMerge = false;
-        //73번줄에 other.Hide()로 되어있으니 gameObject는 저 other를 뜻하는 거임.
+        isMerge = false; //73번줄에 other.Hide()로 되어있으니 gameObject는 저 other를 뜻하는 거임.
         gameObject.SetActive(false); //while문 끝나면 잠금해제하면서 오브젝트 비활성화
     }
 
@@ -119,6 +172,7 @@ public class Dongle : MonoBehaviour
         yield return new WaitForSeconds(0.2f); //0.2초정도, 상대방이 나한테 막 오는 시간정도가 좋을거같음
         anim.SetInteger("Level", level + 1);
         EffectPlay();
+        manager.sfxPlay(GameManager.sfx.LevelUp);
         yield return new WaitForSeconds(0.3f); //애니매이션으로 커지는 속도 맞춰서 기다려주기
         //실제 레벨 상승을 늦게 해주는 이유는 애니메이션 시간떄문이다. 애니메이션이 실행이 되기도 전에 옆에 붙어있던 1레벨 더 큰 동글이가 있다면 바로 또 합쳐질것이다. 그래서 약간의 시간차 두는거임
         level += 1; //level ++;
@@ -127,7 +181,30 @@ public class Dongle : MonoBehaviour
 
         isMerge = false;
     }
-
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.tag == "Finish")
+        {
+            deadTime += Time.deltaTime;
+            if (deadTime > 2)
+            {
+                spriteRenderer.color = new Color(0.9f, 0.2f, 0.2f); //원하는 색깔 원하면 이렇게 new Color(r, g, b)
+            }
+            if (deadTime > 5)
+            {
+                manager.GameOver();
+            }
+        }
+    }
+    //경계선 탈출시 로직 작성
+    void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.tag == "Finish")
+        {
+            deadTime = 0;
+            spriteRenderer.color = Color.white;
+        }
+    }
     void EffectPlay()
     {
         effect.transform.position = transform.position;
