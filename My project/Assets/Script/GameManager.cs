@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
     public Dongle lastDongle;
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
+    public GameObject effectPrefeb;
+    public Transform effectGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
     public int maxLevel;
 
     void Awake()
@@ -17,13 +19,22 @@ public class GameManager : MonoBehaviour
     {
         NextDongle();
     }
+
+    //오브젝트를 새로 생성해주는 함수. 그래서 이 메소드 호출할때마다 클론이 하나씩 하나씩 생기는 거임
     Dongle GetDongle()
-    {//오브젝트를 새로 생성해주는 함수. 그래서 이 메소드 호출할때마다 클론이 하나씩 하나씩 생기는 거임
-        GameObject instant = Instantiate(donglePrefeb, dongleGroup);
-        Dongle instantDongle = instant.GetComponent<Dongle>(); //donglePrefeb 오브젝트는 Dongle스크립트에 있으니 가지고와(Dongle클래스가 이 스크립트 안에 있음)
+    {   //이펙트 생성
+        GameObject instantEffectObj = Instantiate(effectPrefeb, effectGroup);
+        ParticleSystem instantEffect = instantEffectObj.GetComponent<ParticleSystem>();
+        //동글이 생성
+        GameObject instantDongleObj = Instantiate(donglePrefeb, dongleGroup);
+        Dongle instantDongle = instantDongleObj.GetComponent<Dongle>(); //donglePrefeb 오브젝트는 Dongle스크립트에 있으니 가지고와(Dongle클래스가 이 스크립트 안에 있음)
+        instantDongle.effect = instantEffect;//동글 생성하면서 바로 이펙트 변수를 생성했던 것으로 초기화
+
         return instantDongle; //이제 클론객체 생성될때 dongleGroup를 부모객체로 해서 그 아래의 자식객체로 생길꺼임,그러면 생길때의 위치도 부모 기준으로 될거임
     }
-    void NextDongle() //자기자신을 호출하는 재귀함수 작성은 계속 돌기때문에 조심해야함.유니티가 멈춰버림.
+
+    //자기자신을 호출하는 재귀함수 작성은 계속 돌기때문에 조심해야함.유니티가 멈춰버림.
+    void NextDongle()
     {
         Dongle newDongle = GetDongle(); //Instantiate()에 의해 새로운 동글이 객체 나옴
         lastDongle = newDongle;
@@ -35,7 +46,8 @@ public class GameManager : MonoBehaviour
         StartCoroutine("_WaitNext"); //코루틴 제어를 시작하기 위한 함수
     }
 
-    IEnumerator _WaitNext() //IEnumerator: 열거형 인터페이스. 동글이 비워질때까지 기다리는 코루틴 생성
+    //IEnumerator: 열거형 인터페이스. 동글이 비워질때까지 기다리는 코루틴 생성
+    IEnumerator _WaitNext()
     {//유니티가 코루틴을 제어하기 위한 키워드. null로 반환하면 한 프레임을 쉬는 그런 구도가 되버림
         while (lastDongle != null) //yield없이 돌리면 무한루프 빠져 유니티가 멈춤.
         {
