@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; //namespace추가
 
 public class GameManager : MonoBehaviour
 {
@@ -31,8 +32,16 @@ public class GameManager : MonoBehaviour
     int sfxCursor;
 
     [Header("-----------[UI]")]
+    public GameObject endGroup;
+    public GameObject startGroup;
     public TMP_Text scoreText;
+    public TMP_Text maxScoreText;
+    public TMP_Text subScoreText;
 
+
+    [Header("-----------[ETC]")]
+    public GameObject line;
+    public GameObject bottom;
 
 
     void Awake()
@@ -44,13 +53,26 @@ public class GameManager : MonoBehaviour
         {
             MakeDongle();
         }
-    }
-    void Start()
-    {
-        bgmPlayer.Play();
-        NextDongle();
-    }
+        if (!PlayerPrefs.HasKey("MaxScore"))//HashKey:저장된 데이터가 있는지 확인하는 함수
+        {
+            PlayerPrefs.SetInt("MaxScore", 0); //첨엔 이 0값으로 설정되고, 그값이 밑에 maxScoreText.text에 저장이 되겠지요
+        }
 
+        maxScoreText.text = PlayerPrefs.GetInt("MaxScore").ToString(); //데이터 저장을 담당하는 클래스
+    }
+    public void GameStart()
+    {
+        //오브젝트 활성화
+        line.SetActive(true);
+        bottom.SetActive(true);
+        scoreText.gameObject.SetActive(true);
+        maxScoreText.gameObject.SetActive(true);
+        startGroup.SetActive(false);
+
+        bgmPlayer.Play();
+        sfxPlay(sfx.Button);
+        Invoke("NextDongle", 1.5f); //일반적인 함수에다가 딜레이 주고 싶으면 Invoke()함수를 쓰면 됨. NextDongle()함수 호출함
+    }
     Dongle MakeDongle() //새로운 동글이 만들어주고 pool에 담아주는 함수
     {
         GameObject instantEffectObj = Instantiate(effectPrefeb, effectGroup);
@@ -158,10 +180,26 @@ public class GameManager : MonoBehaviour
             dongles[i].Hide(Vector3.up * 100);
             yield return new WaitForSeconds(0.1f); //시간 딜레이 주면서 동글이들 사라지게
         }
-
-        yield return new WaitForSeconds(1f);
-        sfxPlay(sfx.Over);
         bgmPlayer.Stop();
+        //최고 점수 갱신
+        int maxScore = Mathf.Max(score, PlayerPrefs.GetInt("MaxScore"));
+        PlayerPrefs.SetInt("MaxScore", maxScore);
+        //게임오버 UI표시
+        yield return new WaitForSeconds(0.5f);
+        endGroup.SetActive(true);
+        subScoreText.text = "Score : " + scoreText.text;
+        yield return new WaitForSeconds(0.5f);
+        sfxPlay(sfx.Over);
+    }
+    public void Reset()
+    {
+        sfxPlay(sfx.Button);
+        StartCoroutine("_ResetCoroutine");
+    }
+    IEnumerator _ResetCoroutine()
+    {
+        yield return new WaitForSeconds(1f);
+        SceneManager.LoadScene("Main");
     }
 
     public void sfxPlay(sfx type)
@@ -186,5 +224,17 @@ public class GameManager : MonoBehaviour
         }
         sfxPlayer[sfxCursor].Play();
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length; //계속 0,1,2가 될거임
+    }
+    void Update() //모바일에 나가는 기능을 위해 Update에서 로직 추가
+    {
+        if (Input.GetButtonDown("Cancel"))
+        {
+            Application.Quit();
+        }
+    }
+
+    void LateUpdate() // Update종료 후 실행되는 생명주기 함수
+    {
+        scoreText.text = score.ToString();
     }
 }
