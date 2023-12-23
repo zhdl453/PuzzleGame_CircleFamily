@@ -1,34 +1,39 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("-----------[core]")]
+    public int score;
+    public int maxLevel;
+    public bool isOver;
+
+    [Header("-----------[Object Pooling]")]
     public Dongle lastDongle;
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
     public List<Dongle> donglePool;
-
     public GameObject effectPrefeb;
     public Transform effectGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
     public List<ParticleSystem> effectPool;
-
     [Range(1, 30)]//OnDisable 함수에서 각종 변수, 트랜스폼, 물리 초기화
     public int poolSize;
     public int poolCursor;
 
+    [Header("-----------[Audio]")]
     public AudioSource bgmPlayer;
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
-    public enum sfx
-    {
-        LevelUp, Next, Attach, Button, Over
-    }
+    public enum sfx { LevelUp, Next, Attach, Button, Over }
     int sfxCursor;
 
-    public int score;
-    public int maxLevel;
-    public bool isOver;
+    [Header("-----------[UI]")]
+    public TMP_Text scoreText;
+
+
 
     void Awake()
     {
