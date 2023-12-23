@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Dongle : MonoBehaviour
 {
+    public GameManager manager; //퍼블릭변수는 잊지말고 초기화 해줘야함
     public int level;
     public bool isDrag;
     public bool isMerge;
@@ -71,7 +72,8 @@ public class Dongle : MonoBehaviour
                 if (meY < otherY || (meY == otherY && meX > otherX))
                 {//상대방은 숨기고, 
                     other.Hide(transform.position); //상대방은 내쪽으로 흡수되니까 내꺼 동글이의 위치를 인자값으로 넣어줌
-                    //나는 레벨업
+                    //나는 레벨업 시켜야함
+                    LevelUp();
                 }
 
             }
@@ -102,4 +104,25 @@ public class Dongle : MonoBehaviour
         gameObject.SetActive(false); //while문 끝나면 잠금해제하면서 오브젝트 비활성화
     }
 
+    void LevelUp()
+    {
+        isMerge = true;
+        //합쳐질때 물리효과로 이동하면 조금 모양세가 이상할수있으니, 물리속도를 제거해줄거임
+        rigid.velocity = Vector2.zero;
+        rigid.angularVelocity = 0;//회전속도
+
+        StartCoroutine(_LevelUpRoutine());
+    }
+    IEnumerator _LevelUpRoutine()
+    {
+        yield return new WaitForSeconds(0.2f); //0.2초정도, 상대방이 나한테 막 오는 시간정도가 좋을거같음
+        anim.SetInteger("Level", level + 1);
+        yield return new WaitForSeconds(0.3f); //애니매이션으로 커지는 속도 맞춰서 기다려주기
+        //실제 레벨 상승을 늦게 해주는 이유는 애니메이션 시간떄문이다. 애니메이션이 실행이 되기도 전에 옆에 붙어있던 1레벨 더 큰 동글이가 있다면 바로 또 합쳐질것이다. 그래서 약간의 시간차 두는거임
+        level += 1; //level ++;
+
+        manager.maxLevel = Mathf.Max(level, manager.maxLevel);//인자값 중에 초대값을 반환하는 함수. 나의레벨과 게임매니저의 maxlevel를 비교해서 큰 인자값을 int로 반환
+
+        isMerge = false;
+    }
 }

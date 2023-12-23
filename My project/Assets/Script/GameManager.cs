@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
     public Dongle lastDongle;
     public GameObject donglePrefeb;
     public Transform dongleGroup; //동글 그룹 오브젝트를 담을 변수 선언 및 초기화
+    public int maxLevel;
 
     void Awake()
     {
@@ -26,7 +27,9 @@ public class GameManager : MonoBehaviour
     {
         Dongle newDongle = GetDongle(); //Instantiate()에 의해 새로운 동글이 객체 나옴
         lastDongle = newDongle;
-        lastDongle.level = Random.Range(0, 8);
+        lastDongle.manager = this; //게임매니저에서 생성할때 변수 초기화
+        //이 코드를 지우고 실행하면, Dongle 객체는 GameManager에 대한 참조를 가지고 있지 않아서 GameManager의 메소드나 변수에 접근할 수 없게되서 참조 꼭 해줘야함
+        lastDongle.level = Random.Range(0, maxLevel);
         lastDongle.gameObject.SetActive(true); //동글이.cs가 OnEnble()될때 애니가 실행이 되니, 동글이 객체를 활성화 켜줘야 애니도 발동됨
         //lastDongle이 비워질때까지 기다려주는 뭔가 필요한데, 이때 코루틴함수:로직 제어(진행정도 모두를)를 유니티에게 맡기는 함수
         StartCoroutine("_WaitNext"); //코루틴 제어를 시작하기 위한 함수
