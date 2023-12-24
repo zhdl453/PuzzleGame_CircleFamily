@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement; //namespace추가
 
 public class GameManager : MonoBehaviour
@@ -237,4 +236,8 @@ public class GameManager : MonoBehaviour
     {
         scoreText.text = score.ToString();
     }
+
+
 }
+
+
