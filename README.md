@@ -1,7 +1,7 @@
 # PuzzleGame_CircleFamily
 노션 노트정리:
 https://www.notion.so/haribogummy/Puzzle-mini_Circle-Family-by-Unity-6419fff7ad794689949718e3c9a445e1?pvs=4  
-#배운점  
+## 배운점  
 1.사운드, 효과음 효과적으로 관리하는법  
 2.모바일게임 빌드하는법  
 3.코루틴 사용법과 코루틴 vs invoke차이  
